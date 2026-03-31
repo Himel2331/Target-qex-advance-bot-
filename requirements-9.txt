@@ -1,0 +1,3 @@
+python-telegram-bot[job-queue]>=20.8,<22
+Pillow>=10.3,<12
+psutil>=5.9,<7

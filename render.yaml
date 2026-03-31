@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: advanced-quiz-bot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python advanced_quiz_bot.py
+    autoDeploy: false
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: OWNER_IDS
+        sync: false
+      - key: REQUIRED_CHANNEL
+        sync: false
+      - key: BOT_BRAND
+        value: Advanced Quiz Bot
+      - key: TZ
+        value: Asia/Dhaka
+      - key: PORT
+        value: 10000
+      - key: RESULT_RETENTION_HOURS
+        value: 24
+      - key: SCOREBOARD_TOP_N
+        value: 10
+      - key: COUNTDOWN_SECONDS
+        value: 5
+      - key: AUTO_DELETE_CONTROL_AFTER
+        value: 180
+      - key: LOG_LEVEL
+        value: INFO
