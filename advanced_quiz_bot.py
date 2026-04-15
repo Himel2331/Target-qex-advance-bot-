@@ -540,10 +540,12 @@ async def begin_or_advance_exam(context, session_id: str) -> None:
         return
 
     poll_id = msg.poll.id
-    with closing(base.DBH.connect()) as conn:
+      opened_at = base.now_ts()
+      closes_at = opened_at + effective_seconds
+      with closing(base.DBH.connect()) as conn:
         conn.execute(
             "UPDATE session_questions SET poll_id=?, message_id=?, open_ts=?, close_ts=? WHERE session_id=? AND q_no=?",
-            (poll_id, msg.message_id, base.now_ts(), base.now_ts() + effective_seconds, session_id, next_index),
+            (poll_id, msg.message_id, opened_at, closes_at, session_id, next_index),
         )
         conn.execute(
             "UPDATE sessions SET current_index=?, active_poll_id=?, active_poll_message_id=? WHERE id=?",
@@ -571,7 +573,7 @@ async def send_private_results(context, session_id: str) -> None:
     ranking = base.get_session_ranking(session_id)
     rank_map = {int(r["user_id"]): r for r in ranking}
     total_users = max(1, len(ranking))
-    qrows = base.DBH.fetchall("SELECT q_no, message_id FROM session_questions WHERE session_id=? ORDER BY q_no", (session_id,))
+    qrows = base.DBH.fetchall("SELECT q_no, message_id, open_ts, close_ts FROM session_questions WHERE session_id=? ORDER BY q_no",(session_id,),)
     q_map = {int(r["q_no"]): r for r in qrows}
     participants = base.DBH.fetchall("SELECT * FROM participants WHERE session_id=? AND eligible=1", (session_id,))
     total_questions = int(session["total_questions"] or 0)
@@ -594,12 +596,23 @@ async def send_private_results(context, session_id: str) -> None:
             link = base.get_message_link(int(session["chat_id"]), int(q["message_id"] or 0), username)
             label = f"<a href=\"{link}\">Q{q_no}</a>" if link else f"Q{q_no}"
             ans = answer_by_q.get(q_no)
+            spent = 0
+            if ans is not None:
+                open_ts = int(q["open_ts"] or 0)
+                close_ts = int(q["close_ts"] or 0)
+                answered_at = int(ans["answered_at"] or 0)
+                if open_ts and answered_at:
+                    spent = max(0, answered_at - open_ts)
+                    if close_ts and close_ts > open_ts:
+                        spent = min(spent, close_ts - open_ts)
             if ans is None:
                 skipped_links.append(label)
             elif int(ans["is_correct"]) == 1:
-                correct_links.append(label)
+                correct_links.append(f"{label} 
+            ({base.fmt_elapsed(spent)})")
             else:
-                wrong_links.append(label)
+                wrong_links.append(f"{label} 
+            ({base.fmt_elapsed(spent)})")
         correct = int(rank_item["correct"])
         wrong = int(rank_item["wrong"])
         attempted = max(1, correct + wrong)
