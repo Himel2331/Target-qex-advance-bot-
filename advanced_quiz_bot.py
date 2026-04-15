@@ -344,7 +344,7 @@ def format_draft_info(draft: Any) -> str:
         f"Code: <code>{draft['id']}</code>",
         f"Owner: <code>{draft['owner_id']}</code>",
         f"Questions: <b>{len(q_rows)}</b>",
-        f"Time / question: <b>{draft['question_time']} sec</b>",
+        f"Time / question: <b>{base.fmt_elapsed(draft['question_time'])}</b>",
         f"Negative / wrong: <b>{draft['negative_mark']}</b>",
         f"Created: <b>{base.fmt_dt(draft['created_at'])}</b>",
         f"Updated: <b>{base.fmt_dt(draft['updated_at'])}</b>",
@@ -698,7 +698,7 @@ async def handle_inline_query(update: Update, context) -> None:
             f"<b>{base.html_escape(row['title'])}</b>\n"
             f"Quiz ID: <code>{row['id']}</code>\n"
             f"Questions: <b>{row['q_count']}</b>\n"
-            f"Time / question: <b>{row['question_time']} sec</b>\n"
+            f"Time / question: <b>{base.fmt_elapsed(row['question_time'])}</b>\n"
             f"Negative / wrong: <b>{row['negative_mark']}</b>"
         )
         if practice_url:
