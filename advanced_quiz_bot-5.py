@@ -20,10 +20,10 @@ from telegram.error import TelegramError
 from telegram.ext import Application, InlineQueryHandler
 from telegram import InlineQueryResultArticle
 
-BASE_PATH = Path(__file__).resolve().with_name("bot_base.py")
-spec = importlib.util.spec_from_file_location("bot_base", BASE_PATH)
+BASE_PATH = Path(__file__).resolve().with_name("bot_base-1.py")
+spec = importlib.util.spec_from_file_location("bot_base-1", BASE_PATH)
 if spec is None or spec.loader is None:
-    raise RuntimeError(f"Could not load bot_base.py from {BASE_PATH}")
+    raise RuntimeError(f"Could not load bot_base-1.py from {BASE_PATH}")
 base = importlib.util.module_from_spec(spec)
 sys.modules[spec.name] = base
 spec.loader.exec_module(base)
