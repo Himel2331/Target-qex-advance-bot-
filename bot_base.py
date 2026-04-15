@@ -1625,7 +1625,7 @@ async def start_exam_countdown(context: ContextTypes.DEFAULT_TYPE, session_id: s
             f"<b>{html_escape(session['title'])}</b>",
             "",
             f"Questions: <b>{session['total_questions']}</b>",
-            f"Time / question: <b>{session['question_time']} sec</b>",
+            f"Time / question: <b>{fmt_elapsed(session['question_time'])}</b>",
             f"Negative / wrong: <b>{session['negative_mark']}</b>",
             "",
         ]
@@ -6143,7 +6143,7 @@ def build_group_result_text(session: Dict[str, Any], ranking: List[Dict[str, Any
         f"Exam: <b>{html_escape(title)}</b>",
         "",
         f"Questions: <b>{q_count}</b>",
-        f"Time per question: <b>{per_q}</b> sec",
+        f"Time per question: <b>{fmt_elapsed(per_q)}</b>",
         f"Participants: <b>{total}</b>",
         "",
     ]
