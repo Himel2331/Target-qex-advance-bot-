@@ -3938,12 +3938,17 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
         return
     if qrow["session_status"] != "running":
         return
+    answered_at = now_ts()
+      close_ts = int(qrow["close_ts"] or 0)
+    if close_ts > 0:
+       answered_at = min(answered_at, close_ts)
+        
     if not answer.option_ids:
         return
     if not await is_required_channel_member(context, user.id):
         DBH.execute(
             "INSERT INTO participants(session_id, user_id, username, display_name, eligible, last_answer_at) VALUES(?,?,?,?,0,?) ON CONFLICT(session_id,user_id) DO UPDATE SET eligible=0, last_answer_at=excluded.last_answer_at",
-            (qrow["session_id"], user.id, user.username, choose_name(user.username, user.first_name, user.last_name, user.id), now_ts()),
+            (qrow["session_id"], user.id, user.username, choose_name(user.username, user.first_name, user.last_name, user.id), answered_at),
         )
         return
     selected = int(answer.option_ids[0])
@@ -3960,7 +3965,7 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
             return
         conn.execute(
             "INSERT INTO answers(session_id, q_no, user_id, selected_option, is_correct, answered_at) VALUES(?,?,?,?,?,?)",
-            (qrow["session_id"], qrow["q_no"], user.id, selected, is_correct_ans, now_ts()),
+            (qrow["session_id"], qrow["q_no"], user.id, selected, is_correct_ans, answered_at),
         )
         conn.execute(
             """
@@ -3983,7 +3988,7 @@ async def handle_poll_answer(update: Update, context: ContextTypes.DEFAULT_TYPE)
                 1 if is_correct_ans else 0,
                 0 if is_correct_ans else 1,
                 delta,
-                now_ts(),
+                answered_at,
             ),
         )
         conn.commit()
@@ -4597,7 +4602,8 @@ def get_session_ranking(session_id: str) -> List[Dict[str, Any]]:
                 close_ts = int(meta.get("close_ts") or 0)
                 window = max(1, close_ts - open_ts) if close_ts and close_ts > open_ts else default_window
                 answered_at = ans_map.get(q_no)
-                if answered_at:
+                if not answered_at:
+                    continue 
                     delay = max(0, answered_at - open_ts)
                     duration += min(delay, window)
                 else:
